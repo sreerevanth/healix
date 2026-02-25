@@ -1,3 +1,8 @@
+![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
+![Status](https://img.shields.io/badge/status-production--hardened-brightgreen)
+![Platform](https://img.shields.io/badge/platform-linux-orange)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-60%20passed-success)
 # Healix
 
 > Adaptive Runtime Process Remediation Engine for Linux
