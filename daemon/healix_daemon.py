@@ -3,14 +3,11 @@
 Healix Daemon - Userspace Controller
 =====================================
 Layer 1 → 5 orchestrator.
-
 Loads eBPF probe, reads syscall events from ring buffer,
 feeds them through the behavioral fingerprint engine,
 anomaly scorer, remediation selector, and feedback loop.
-
 Requirements:
     pip install bcc psutil rich
-
 Run as root:
     sudo python3 healix_daemon.py [--dry-run] [--log-level DEBUG]
 """
@@ -25,16 +22,13 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional
-
 import psutil
-
 try:
     from bcc import BPF, PerfType, PerfSWConfig
     BCC_AVAILABLE = True
 except ImportError:
     BCC_AVAILABLE = False
     print("[WARN] bcc not found. Running in SIMULATION mode.")
-
 try:
     from rich.console import Console
     from rich.live import Live
@@ -42,7 +36,6 @@ try:
     console = Console()
 except ImportError:
     console = None
-
 # ─────────────────────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────────────────────
@@ -67,7 +60,6 @@ log = logging.getLogger("healix.daemon")
 # ─────────────────────────────────────────────────────────────
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from models.fingerprint import BehavioralFingerprint, ProcessState
 from models.anomaly_scorer import AnomalyScorer
 from models.context_model import ContextConditionedModel, AnomalyClass, classify_anomaly
@@ -75,11 +67,9 @@ from models.recovery_metric import RecoveryMonitor
 from interventions.remediation import RemediationEngine
 from feedback.feedback_loop import FeedbackLoop
 from daemon.pid_state_machine import PIDStateMachine
-
 # ─────────────────────────────────────────────────────────────
 # Event dataclass (mirrors C struct syscall_event)
 # ─────────────────────────────────────────────────────────────
-
 @dataclass
 class SyscallEvent:
     timestamp_ns: int
@@ -91,11 +81,9 @@ class SyscallEvent:
     arg1: int
     arg2: int
     comm: str
-
 # ─────────────────────────────────────────────────────────────
 # Daemon
 # ─────────────────────────────────────────────────────────────
-
 class HealixDaemon:
     def __init__(self, dry_run: bool = False):
         self.dry_run   = dry_run
@@ -127,7 +115,6 @@ class HealixDaemon:
 
         signal.signal(signal.SIGINT,  self._shutdown)
         signal.signal(signal.SIGTERM, self._shutdown)
-
     # ── eBPF Setup ────────────────────────────────────────────
 
     def load_ebpf(self):
@@ -141,16 +128,12 @@ class HealixDaemon:
         log.info(f"Loading eBPF probe from {EBPF_SRC}")
         self.bpf = BPF(src_file=str(EBPF_SRC))
         log.info("eBPF probe loaded successfully")
-
     # ── Event Callback ────────────────────────────────────────
-
     def handle_event(self, cpu, data, size):
         """Called for each syscall event from ring buffer."""
         if not self.bpf:
             return
-
         raw = self.bpf["events"].event(data)
-
         event = SyscallEvent(
             timestamp_ns = raw.timestamp_ns,
             pid          = raw.pid,
@@ -162,7 +145,6 @@ class HealixDaemon:
             arg2         = raw.arg2,
             comm         = raw.comm.decode("utf-8", errors="replace").rstrip("\x00"),
         )
-
         self._process_event(event)
 
     def _process_event(self, event: SyscallEvent):
